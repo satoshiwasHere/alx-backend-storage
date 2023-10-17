@@ -1,36 +1,37 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 """
-Improving '12-log_stats.py' by adding the top 10 of,
-the most present IPs in the collection nginx of the database logs:
+Script provides some stats about Nginx logs stored in MongoDB:
 """
 from pymongo import MongoClient
 
-
-def nginx_stats_check():
+if __name__ == "__main__":
     """
-    provides stats about Nginx logs stored in MongoDB
+    Provides stats about Nginx logs stored in MongoDB
     """
-    client = MongoClient()
-    collection = client.logs.nginx
+    client = MongoClient('mongodb://127.0.0.1:27017')
+    nginx_collection = client.logs.nginx
 
-    num_of_docs = collection.count_documents({})
-    print("{} logs".format(num_of_docs))
-    print("Methods:")
-    methods_list = ["GET", "POST", "PUT", "PATCH", "DELETE"]
-    for method in methods_list:
-        method_count = collection.count_documents({"method": method})
-        print("\tmethod {}: {}".format(method, method_count))
-    status = collection.count_documents({"method": "GET", "path": "/status"})
-    print("{} status check".format(status))
+    n_logs = nginx_collection.count_documents({})
+    print(f'{n_logs} logs')
 
-    print("IPs:")
+    methods = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+    print('Methods:')
+    for method in methods:
+        count = nginx_collection.count_documents({"method": method})
+        print(f'\tmethod {method}: {count}')
 
-    top_IPs = collection.aggregate([
+    status_check = nginx_collection.count_documents(
+        {"method": "GET", "path": "/status"}
+    )
+
+    print(f'{status_check} status check')
+
+    top_ips = nginx_collection.aggregate([
         {"$group":
-         {
-             "_id": "$ip",
-             "count": {"$sum": 1}
-         }
+            {
+                "_id": "$ip",
+                "count": {"$sum": 1}
+            }
          },
         {"$sort": {"count": -1}},
         {"$limit": 10},
@@ -40,11 +41,9 @@ def nginx_stats_check():
             "count": 1
         }}
     ])
-    for top_ip in top_IPs:
+
+    print("IPs:")
+    for top_ip in top_ips:
+        ip = top_ip.get("ip")
         count = top_ip.get("count")
-        ip_address = top_ip.get("ip")
-        print("\t{}: {}".format(ip_address, count))
-
-
-if __name__ == "__main__":
-    nginx_stats_check()
+        print(f'\t{ip}: {count}')
