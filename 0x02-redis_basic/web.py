@@ -37,5 +37,5 @@ def get_page(url: str) -> str:
     """
     Makes a http request retuning HTML content of url 
     """
-    response = requests.get(url)
-    return response.text
+    res = requests.get(url)
+    return res.text
