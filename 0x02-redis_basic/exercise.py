@@ -2,11 +2,11 @@
 """ 
 Redis client module and python exercise
 """
+import redis
 from uuid import uuid4
 from functools import wraps
 from typing import Any, Callable, Optional, Union
 
-import redis
 
 def count_calls(method: Callable) -> Callable:
     """
